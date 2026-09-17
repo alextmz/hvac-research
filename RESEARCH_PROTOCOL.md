@@ -9,8 +9,7 @@ Do not reconstruct state from chat history or run broad startup audits.
 ```sql
 select public.begin_research_run(
   '<objective>',
-  '<optional notes>',
-  interval '30 minutes'
+  '<optional notes>'
 ) as run_id;
 ```
 
@@ -19,7 +18,7 @@ This recovers stale interrupted runs/queue work, rejects unsafe unquarantined tr
 Cheap health check:
 
 ```sql
-select * from public.research_integrity_health(interval '30 minutes');
+select * from public.research_integrity_health();
 ```
 
 Healthy before/after work means at least:
@@ -139,7 +138,7 @@ Parallelise retrieval more readily than semantic mapping and writes.
 Run:
 
 ```sql
-select * from public.research_integrity_health(interval '30 minutes');
+select * from public.research_integrity_health();
 ```
 
 Mark the current run `completed`, `stopped` or `failed` with `ended_at` and concise notes.
