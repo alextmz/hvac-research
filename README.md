@@ -6,16 +6,11 @@ Evidence-first Australian ducted HVAC research.
 
 **This README is an instruction to execute the research autonomously, not merely documentation to read.**
 
-When asked to read/follow this README, immediately begin or resume the research project and **LOOP CONTINUOUSLY** through the live research state until **one** of these two conditions occurs:
-
-1. **THE PROJECT IS DONE** according to the live database, stage stopping rules and final completion/materiality audit; or
-2. **54 MINUTES OF WALL-CLOCK TIME HAVE ELAPSED** since the start of the current session/run.
-
-Whichever happens first is the hard stopping condition.
+When asked to read/follow this README, immediately begin or resume the research project and **LOOP CONTINUOUSLY** through the live research state until **THE PROJECT IS DONE** according to the live database, stage stopping rules and final completion/materiality audit.
 
 ### Do not stop between steps
 
-Until one of the two hard stopping conditions above is reached:
+Until the project is complete:
 
 - **Do not stop after one search, one product, one queue item, one family, one pass, or one stage.**
 - **Do not stop merely because the current stage became complete.** Re-query live state and immediately advance to the next unfinished stage.
@@ -30,8 +25,6 @@ Until one of the two hard stopping conditions above is reached:
 The intended control flow is explicitly:
 
 ```text
-START WALL CLOCK
-    ↓
 read live state / begin or resume run
     ↓
 select earliest unfinished stage + highest-value actionable work
@@ -42,17 +35,6 @@ re-query authoritative live state
     ↓
 project complete? ── yes → final integrity/completion checks → STOP
     │ no
-    ↓
-50 minutes elapsed? ── yes → ENTER CLOSEOUT MODE
-    │ no                         ↓
-    │                    finish pending/atomic work,
-    │                    persist state, integrity check,
-    │                    avoid starting long new work
-    │                            ↓
-    │                    54 minutes elapsed? ── yes → HARD STOP
-    │                            │ no
-    │                            └──── continue closeout only
-    │
     └──────────────────────────────→ LOOP AGAIN
 ```
 
@@ -70,56 +52,19 @@ The live database remains authoritative for current systems, queues, evidence, d
 
 At the start of every run:
 
-1. Record/retain the run's wall-clock start time so both the **50-minute closeout threshold** and **54-minute hard limit** can be enforced.
-2. Read [`RESEARCH_INDEX.md`](RESEARCH_INDEX.md).
-3. Read [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md).
-4. Start/resume using the project's live-database research-run mechanism.
-5. Inspect authoritative live state and determine the earliest unfinished stage.
-6. Read only the active stage file under `research/stages/`, except where a dependency requires another stage document.
-7. Execute useful research work under the protocol.
-8. Commit accepted facts/state changes deterministically and atomically as specified by the protocol.
-9. Re-query live state.
-10. If the current stage is complete, advance immediately to the next unfinished stage.
-11. If research changes eligibility, identity or another earlier assumption, reopen/revisit the affected work as required by live state.
-12. Repeat steps 5–11 continuously until the project is complete or the run reaches the 50-minute closeout threshold.
-13. At 50 minutes, enter closeout mode as defined below and remain in closeout mode until work is safely wrapped or the 54-minute hard cutoff is reached.
+1. Read [`RESEARCH_INDEX.md`](RESEARCH_INDEX.md).
+2. Read [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md).
+3. Start/resume using the project's live-database research-run mechanism.
+4. Inspect authoritative live state and determine the earliest unfinished stage.
+5. Read only the active stage file under `research/stages/`, except where a dependency requires another stage document.
+6. Execute useful research work under the protocol.
+7. Commit accepted facts/state changes deterministically and atomically as specified by the protocol.
+8. Re-query live state.
+9. If the current stage is complete, advance immediately to the next unfinished stage.
+10. If research changes eligibility, identity or another earlier assumption, reopen/revisit the affected work as required by live state.
+11. Repeat steps 4–10 continuously until the project is complete.
 
 Do not reconstruct authoritative state from chat history, previous summaries or old prompts. Do not use a fixed candidate list when the database says otherwise.
-
-## At 50 minutes — mandatory closeout mode
-
-When **50 minutes of wall-clock time** have elapsed and the project is not already complete, **stop initiating substantial new research work and begin closing out the run**.
-
-From minute 50 onward:
-
-- finish any currently in-flight atomic fact commit, bounded verification, retrieval, queue update or state transition that can reasonably complete before minute 54;
-- do not start a new broad search, new product/family investigation, new crawl, deep research branch, or other task likely to run past the hard cutoff;
-- commit any already-supported facts that are ready to be committed;
-- record meaningful failed/exhausted attempts and blockers that have already been discovered;
-- release/complete/requeue any claimed queue work as appropriate so the next run can resume deterministically;
-- persist required heartbeat/run/activity markers and any other authoritative state needed for interruption recovery;
-- re-query the live database for current stage, actionable queue and completion state;
-- perform required integrity/consistency checks;
-- prepare the research run for a clean stop, including concise notes describing what changed and the next live action.
-
-**Closeout mode is not an early stop.** Continue useful bounded cleanup, commits, reconciliation and integrity work between minutes 50 and 54. The purpose of this four-minute window is to leave no avoidable half-finished state while still enforcing the hard deadline.
-
-If the project becomes fully complete during closeout, perform the final completion/integrity checks and stop immediately rather than waiting for minute 54.
-
-## At the 54-minute cutoff — HARD STOP
-
-At **54 minutes of wall-clock time**, stop the run even if research remains unfinished.
-
-At the hard cutoff:
-
-- do not initiate any new operation;
-- finish or rollback only an operation that is already atomic/in-flight and cannot safely be abandoned mid-transaction;
-- persist any required attempt, queue, heartbeat/run, blocker and state information that can be recorded immediately;
-- ensure the research run is marked with the appropriate `stopped`, `completed` or `failed` state and `ended_at`/notes according to the protocol;
-- derive final status from the live database;
-- report concisely what materially changed, current stage/state, blockers if any, and the next live action for the next run.
-
-The **54-minute limit is absolute**. Do not continue discretionary research beyond it. The next invocation must resume from persisted live state rather than repeating completed work.
 
 ## Completion
 
