@@ -110,11 +110,20 @@ An interrupted fact transaction leaves no half-fact. An interrupted pass may lea
 
 Quarantined facts should be re-researched when material; queues relying only on quarantined facts should remain/reopen unresolved.
 
-## 9. Parallelism
+## 9. Tool selection and parallelism
 
-Optimise for deterministic reasoning rather than maximum concurrency.
+Optimise for deterministic reasoning and research yield, not maximum concurrency or maximum tool use.
 
-Default:
+When connected and economical:
+
+- use **ordinary web search/fetch** for straightforward discovery and exact official pages;
+- use **Exa** for broader/deeper discovery when normal search is weak, for locating technical PDFs/manuals, and for finding independent corroboration efficiently;
+- use **Firecrawl** when structured extraction, crawling, or retrieval from awkward manufacturer/document sites materially reduces effort;
+- use **GitHub** for project instructions/artifacts and **Supabase** for authoritative structured research state.
+
+Do not run the same query through multiple search providers by default. Escalate tools only when the current method misses needed evidence, retrieval is difficult, or independent corroboration is required. Tool availability/pricing may change; evidence standards must not.
+
+Default concurrency:
 
 - one engineering/product family per reasoning task;
 - retrieve roughly 3–4 useful exact/independent documents/pages in parallel when helpful;
