@@ -4,11 +4,28 @@ This is the only project document that should be read on every research session.
 
 ## Authority
 
+- GitHub owner/account: `alextmz`
 - Repository: `alextmz/hvac-research`
 - Supabase project: `hvac-research-supabase`
 - Supabase ref: `oqaeycpbvdvlnmrrjyat`
 - The live Supabase database is the source of truth.
 - `historical/v21/` and old reports/prompts are historical evidence/context only, never verified truth by themselves.
+
+## Tool availability
+
+Use connected tools when they improve quality or reduce research cost/time, but do not make project correctness depend on a particular search vendor.
+
+Preferred roles when available:
+
+- **Supabase** — authoritative structured state, queues, claims/evidence and atomic writes.
+- **GitHub** — project instructions, migrations, historical/source snapshots and reports.
+- **Exa** — broad/deep discovery, especially when ordinary search is missing technical documents or independent sources.
+- **Firecrawl** — retrieval/extraction/crawling when manufacturer sites, technical pages or document collections are awkward to fetch systematically.
+- **Normal web search/fetch** — quick discovery and direct official-page verification where sufficient.
+
+Use the cheapest/simplest tool that preserves quality. Do not repeat the same discovery work across Exa, Firecrawl and ordinary web search unless corroboration or retrieval failure justifies it.
+
+Tool availability and pricing may change. If Exa or Firecrawl is unavailable or no longer economical, fall back without changing evidence standards.
 
 ## Required loading rule
 
@@ -52,6 +69,6 @@ Exact model/revision identity always outranks family-level similarity.
 
 Use this for new sessions:
 
-> Continue the Australian ducted HVAC research project using the live Supabase database as the source of truth. Read `RESEARCH_INDEX.md`, then `RESEARCH_PROTOCOL.md`, then only the stage file selected by the live state. Start through `public.begin_research_run(...)`. Work the earliest unfinished stage autonomously, using the database queues/attempt history rather than chat history. Use `trusted_claims` for decisions and `commit_research_fact()` for accepted facts. Follow exact-model/revision evidence rules and the stage stopping criteria. When a stage becomes complete, advance to the next stage in the same session if practical. Before reporting, run the integrity health check and derive all counts/status from the live DB. Keep reporting concise: material changes, blockers, current stage, and next action.
+> Continue the Australian ducted HVAC research project in GitHub repository `alextmz/hvac-research` using the live Supabase database as the source of truth. Read `RESEARCH_INDEX.md`, then `RESEARCH_PROTOCOL.md`, then only the stage file selected by the live state. Start through `public.begin_research_run(...)`. Work the earliest unfinished stage autonomously, using the database queues/attempt history rather than chat history. Use `trusted_claims` for decisions and `commit_research_fact()` for accepted facts. Follow exact-model/revision evidence rules and the stage stopping criteria. Use Exa and Firecrawl when available and useful, but choose the simplest economical retrieval method that preserves quality. When a stage becomes complete, advance to the next stage in the same session if practical. Before reporting, run the integrity health check and derive all counts/status from the live DB. Keep reporting concise: material changes, blockers, current stage, and next action.
 
 That prompt is intended to remain stable while this index and the stage documents evolve.
