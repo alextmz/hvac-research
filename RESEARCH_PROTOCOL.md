@@ -18,6 +18,14 @@ select * from public.claim_research_work('<run uuid>', null);
 
 With `p_stage = null`, the database selects the earliest claimable stage. The returned rows share one `work_scope`; another run cannot own that scope while its lease is active.
 
+Controller-platform specialists may claim Stage 3 explicitly:
+
+```sql
+select * from public.claim_research_work('<run uuid>', 3);
+```
+
+Use explicit Stage 3 only when the returned entity is `controller`; otherwise release it without research. Generic and system-specific workers continue to use `null`.
+
 Treat each claim result as one immutable `current_work` bundle:
 
 - Keep `work_scope`, `queue_id`, `entity_id` and `field` together exactly as returned.
@@ -129,7 +137,9 @@ Existing `DO NOT PROGRESS` systems stay out of normal candidate work unless fres
 
 ## 8. Attempts and interruption recovery
 
-Record meaningful retrieval attempts. Before repeating a search path, inspect prior attempts and change strategy unless a new source/version justifies retrying it.
+Record meaningful retrieval attempts. Before external retrieval, check existing sources/evidence and prior attempts for the same document or URL; reuse them when freshness is not material. During a session, locally cache downloaded documents by URL/content hash and reuse them. Local cache is non-authoritative and never replaces source provenance.
+
+Before repeating a search path, inspect prior attempts and change strategy unless a new source/version justifies retrying it.
 
 Interrupted fact transactions leave no half-fact. Interrupted research leaves an expiring lease; scheduled reconciliation recovers it automatically. A run marker may briefly remain `running` after a client disappears, so use effective lease-backed liveness for external monitoring.
 
