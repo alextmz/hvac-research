@@ -34,7 +34,7 @@ For any research session:
 1. Read this file.
 2. Read [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md).
 3. Start through `public.begin_research_run(...)`.
-4. Claim work through `public.claim_research_work(run_id, null)`; the DB selects the earliest claimable stage and exclusively leases one entity-stage scope.
+4. Claim work through `public.claim_research_work(run_id, null)`; the DB selects the earliest claimable stage and exclusively leases one entity-stage scope. A controller-platform specialist may instead call `public.claim_research_work(run_id, 3)` and work only a returned `controller` entity; generic/system research continues to use `null`.
 5. Treat the complete claim result as one immutable work bundle. Use queue/entity/field identifiers only from the same returned row.
 6. Read **only that stage file** unless another stage is directly needed to resolve a dependency.
 7. Work the claimed scope, calling `heartbeat_research_work(run_id)` at least every 5 minutes during research.
