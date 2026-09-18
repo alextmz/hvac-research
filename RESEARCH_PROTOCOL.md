@@ -103,7 +103,7 @@ Never update/delete:
 
 Corrections are new assertions/evidence. Preserve contradictions and resolve conflicts explicitly.
 
-## 6. Evidence and identity
+## 6. Evidence, identity and context privacy
 
 For decisive engineering facts/elimination prefer:
 
@@ -116,6 +116,8 @@ Retailers, snippets, historical v21, model-number inference and different revisi
 Never transfer specs merely because products share manufacturer, family, nominal capacity, indoor unit or suffix. Exact pairing/revision/phase/refrigerant generation matters. Unknown is not negative evidence.
 
 Keep factual reliability separate from interpretation. Useful dimensions include source authority/market relevance, exact model match, directness, independent-source count, material conflict and semantic certainty.
+
+Project context may record only the coarse Australian climate region needed for analysis. Do not store or introduce precise user location, person names, email addresses or other personally identifiable information in prompts, notes, reports or research context.
 
 ## 7. Elimination discipline
 
