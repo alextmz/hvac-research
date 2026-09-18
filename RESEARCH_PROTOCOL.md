@@ -22,7 +22,7 @@ Do not research queue work before claiming it. Legacy unclaimed commits remain a
 
 ## 2. Keep leases alive
 
-A run has no maximum age. Staleness is based on heartbeat, not `started_at`.
+A run has no maximum age. Effective liveness requires a recent heartbeat plus an active lease backed by `working` queue rows; `research_runs.status='running'` alone is not proof that an agent still exists.
 
 Default work leases are 15 minutes. While searching/reasoning for claimed work, refresh at least every 5 minutes and before any long retrieval batch:
 
@@ -30,7 +30,7 @@ Default work leases are 15 minutes. While searching/reasoning for claimed work, 
 select * from public.heartbeat_research_work('<run uuid>');
 ```
 
-`claim_research_work()` and `commit_research_fact()` also heartbeat the run. If a lease expires, reclaim the work before committing.
+`claim_research_work()` and `commit_research_fact()` also heartbeat the run. Heartbeat removes orphan leases before extending valid ones. If a lease expires, reclaim the work before committing.
 
 If abandoning a still-actionable bundle:
 
@@ -38,11 +38,15 @@ If abandoning a still-actionable bundle:
 select public.release_research_work('<run uuid>','<work_scope>','<reason>');
 ```
 
-Expired leases are recoverable by other agents. `begin_research_run()` recovers stale runs/queue state using heartbeat/lease age.
+A DB cron job runs runtime reconciliation every 5 minutes. It recovers expired/abandoned work, removes orphan leases, and closes idle/stale run markers. `begin_research_run()` also invokes stale recovery.
 
 ## 3. Read authoritative state
 
-The live Supabase database is authoritative. Use `public.trusted_claims` for decisions, comparisons, elimination, completion checks and reports.
+The live Supabase database is authoritative.
+
+- Use `public.canonical_claims` for single-value decisions, comparisons, elimination, completion checks and reports.
+- Use `public.trusted_claims` for the full trusted evidence history and conflict investigation.
+- An open conflict suppresses that entity/field from `canonical_claims` until resolved.
 
 Use `research_queue`, `research_attempts`, conflicts and stopping rules for work selection. Do not reconstruct state from chat history or prompt counts.
 
@@ -55,9 +59,15 @@ select * from public.research_integrity_health();
 Healthy means at least:
 
 - `stale_running_runs = 0`
+- `idle_running_runs = 0`
 - `stale_working_queue = 0`
+- `working_queue_without_active_lease = 0`
+- `orphan_active_work_leases = 0`
 - `expired_work_leases = 0`
+- `open_conflicts = 0`
 - `unquarantined_supported_verified_without_evidence = 0`
+
+For external status, use `effective_active_runs`, not raw `running_runs`.
 
 Quarantined historical claims are allowed but are not trusted facts.
 
@@ -70,6 +80,8 @@ Atomic unit: **one accepted fact for one exact entity/system**. Retrieval and re
 A coordinated queue commit is accepted only from the run that owns its unexpired lease. Exact retries are idempotent through the deterministic fact key.
 
 Never insert a trusted claim first and attach evidence later.
+
+Supported numeric evidence is checked against existing trusted numeric assertions for the same entity/field. Material disagreement automatically creates an open conflict; resolve it explicitly before using that field canonically.
 
 ## 5. Preserve evidence history
 
@@ -100,13 +112,13 @@ Keep factual reliability separate from interpretation. Useful dimensions include
 
 Never delete an unattractive system. Set research disposition only when the active stage's evidence rule permits it.
 
-Existing `DO NOT PROGRESS` systems stay out of normal candidate work unless fresh sufficiently authoritative evidence disproves the decisive basis. Every elimination must trace to exact trusted evidence.
+Existing `DO NOT PROGRESS` systems stay out of normal candidate work unless fresh sufficiently authoritative evidence disproves the decisive basis. Every elimination must trace to exact canonical evidence.
 
 ## 8. Attempts and interruption recovery
 
 Record meaningful retrieval attempts. Before repeating a search path, inspect prior attempts and change strategy unless a new source/version justifies retrying it.
 
-Interrupted fact transactions leave no half-fact. Interrupted research leaves an expiring lease; another agent may reclaim it after expiry.
+Interrupted fact transactions leave no half-fact. Interrupted research leaves an expiring lease; scheduled reconciliation recovers it automatically. A run marker may briefly remain `running` after a client disappears, so use effective lease-backed liveness for external monitoring.
 
 ## 9. Parallelism
 
