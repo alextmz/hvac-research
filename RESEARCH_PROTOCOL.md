@@ -133,7 +133,17 @@ Resolve or release all work owned by the run, then run:
 select * from public.research_integrity_health();
 ```
 
-Mark the run `completed`, `stopped` or `failed` with `ended_at` and concise notes. Re-query live DB state for all reported counts/status.
+Finish the run directly:
+
+```sql
+update public.research_runs
+set status = '<completed|stopped|failed>',
+    ended_at = now(),
+    notes = '<concise notes>'
+where id = '<run uuid>' and status = 'running';
+```
+
+Re-query live DB state for all reported counts/status.
 
 Report only material changes, blockers, current stage and next action.
 
