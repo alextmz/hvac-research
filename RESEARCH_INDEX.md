@@ -33,11 +33,11 @@ For any research session:
 
 1. Read this file.
 2. Read [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md).
-3. Start/resume through `public.begin_research_run(...)` and inspect live queue/trusted state.
-4. Determine the earliest unfinished stage below.
+3. Start through `public.begin_research_run(...)`.
+4. Claim work through `public.claim_research_work(run_id, null)`; the DB selects the earliest claimable stage and exclusively leases one entity-stage scope.
 5. Read **only that stage file** unless another stage is directly needed to resolve a dependency.
-6. Work until that stage's stopping condition is met or the current pass is economically exhausted.
-7. Re-query live state; if the stage is complete, advance to the next stage without needing a new master prompt.
+6. Work the claimed scope, calling `heartbeat_research_work(run_id)` at least every 5 minutes during research.
+7. Resolve/release the scope, re-query live state, then claim the next scope. Advance stages automatically when earlier-stage work is exhausted.
 
 Do not reconstruct project state from chat history or copy counts/candidate lists from prompts.
 
@@ -69,6 +69,6 @@ Exact model/revision identity always outranks family-level similarity.
 
 Use this for new sessions:
 
-> Continue the Australian ducted HVAC research project in GitHub repository `alextmz/hvac-research` using the live Supabase database as the source of truth. Read `RESEARCH_INDEX.md`, then `RESEARCH_PROTOCOL.md`, then only the stage file selected by the live state. Start through `public.begin_research_run(...)`. Work the earliest unfinished stage autonomously, using the database queues/attempt history rather than chat history. Use `trusted_claims` for decisions and `commit_research_fact()` for accepted facts. Follow exact-model/revision evidence rules and the stage stopping criteria. Use Exa and Firecrawl when available and useful, but choose the simplest economical retrieval method that preserves quality. When a stage becomes complete, advance to the next stage in the same session if practical. Before reporting, run the integrity health check and derive all counts/status from the live DB. Keep reporting concise: material changes, blockers, current stage, and next action.
+> Continue the Australian ducted HVAC research project in `alextmz/hvac-research` with live Supabase as source of truth. Read `RESEARCH_INDEX.md`, `RESEARCH_PROTOCOL.md`, then only the active stage file. Start with `begin_research_run()`, claim work with `claim_research_work(run_id, null)`, and work only the returned leased scope. Heartbeat at least every 5 minutes while researching. Use `trusted_claims` for decisions and `commit_research_fact()` for accepted facts. Follow exact-model/revision evidence rules, prior attempt memory and stage stopping criteria. Use Exa/Firecrawl only when they improve retrieval or economics. Resolve or release each scope before claiming another. Before reporting, run the integrity health check and derive status from the live DB. Report only material changes, blockers, current stage and next action.
 
 That prompt is intended to remain stable while this index and the stage documents evolve.
