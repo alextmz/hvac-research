@@ -56,13 +56,17 @@ Earlier-stage discoveries can reopen later work. Never force monotonic progress 
 
 Evaluate current Australian single-split reverse-cycle whole-home ducted systems relevant to roughly 7–13 kW rated cooling, with emphasis on systems that can serve the intended whole-home load while performing well at low load and with small/night zones. Optimise decision usefulness, not raw data volume.
 
+Climate context: use the Australian **Hot** climate region for seasonal cooling-efficiency decisions. Do not store or introduce precise user location, person names, email addresses or other personally identifiable information in project instructions, prompts, notes or research context.
+
 Primary decision dimensions:
 
 - low-load cooling and small-zone/overnight behaviour;
-- efficiency;
+- cooling efficiency, using residential `tcspf_hot` as the primary seasonal metric;
 - zoning/control quality and Home Assistant integration;
 - reliability, serviceability and parts/support in Australia;
 - market pricing/value.
+
+EER/AEER are rated-point secondary indicators only. Do not rank or eliminate systems from EER/AEER alone; surface them only as supporting context or warnings where they materially disagree with seasonal efficiency.
 
 Exact model/revision identity always outranks family-level similarity.
 
@@ -70,6 +74,6 @@ Exact model/revision identity always outranks family-level similarity.
 
 Use this for new sessions:
 
-> Continue the Australian ducted HVAC research project in `alextmz/hvac-research` with live Supabase as source of truth. Read `RESEARCH_INDEX.md`, `RESEARCH_PROTOCOL.md`, then only the active stage file. Start with `begin_research_run()`, claim work with `claim_research_work(run_id, null)`, and work only the returned leased scope. Treat each claim result as one immutable work bundle: commit queue/entity/field only from the same returned row, then discard the bundle before claiming another scope. Heartbeat at least every 5 minutes while researching. Use `canonical_claims` for single-value decisions and `trusted_claims` for evidence/history; commit accepted facts with `commit_research_fact()`. Follow exact-model/revision evidence rules, prior attempt memory and stage stopping criteria. Use Exa/Firecrawl only when they improve retrieval or economics. Resolve or release each scope before claiming another. Before reporting, run the integrity health check and derive status from effective active leases, queue state and the live DB rather than `research_runs.status` alone. Report only material changes, blockers, current stage and next action.
+> Continue the Australian ducted HVAC research project in `alextmz/hvac-research` with live Supabase as source of truth. Read `RESEARCH_INDEX.md`, `RESEARCH_PROTOCOL.md`, then only the active stage file. Start with `begin_research_run()`, claim work with `claim_research_work(run_id, null)`, and work only the returned leased scope. Treat each claim result as one immutable work bundle: commit queue/entity/field only from the same returned row, then discard the bundle before claiming another scope. Heartbeat at least every 5 minutes while researching. Use `canonical_claims` for single-value decisions and `trusted_claims` for evidence/history; commit accepted facts with `commit_research_fact()`. For cooling efficiency use residential `tcspf_hot` as the primary comparison; treat EER/AEER as secondary warning-only context, never a standalone elimination basis. Do not store or introduce precise user location or other personally identifiable information in project context. Follow exact-model/revision evidence rules, prior attempt memory and stage stopping criteria. Use Exa/Firecrawl only when they improve retrieval or economics. Resolve or release each scope before claiming another. Before reporting, run the integrity health check and derive status from effective active leases, queue state and the live DB rather than `research_runs.status` alone. Report only material changes, blockers, current stage and next action.
 
 That prompt is intended to remain stable while this index and the stage documents evolve.
