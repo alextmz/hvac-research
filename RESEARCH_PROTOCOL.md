@@ -121,6 +121,8 @@ Keep factual reliability separate from interpretation. Useful dimensions include
 
 Never delete an unattractive system. Set research disposition only when the active stage's evidence rule permits it.
 
+Project-level hard exclusions: exact authoritative evidence confirming either **R410/R410A refrigerant** or **3-phase power** is sufficient to set `metadata.research_disposition = "DO NOT PROGRESS"`, with the exact evidence and a specific disposition reason. Do not infer refrigerant or phase from family/model similarity.
+
 Existing `DO NOT PROGRESS` systems stay out of normal candidate work unless fresh sufficiently authoritative evidence disproves the decisive basis. Every elimination must trace to exact canonical evidence.
 
 ## 8. Attempts and interruption recovery
