@@ -52,11 +52,15 @@ Retailers, snippets, historical reports and model-number inference are discovery
 
 Retain every system in the database. Do not delete it.
 
-Hard rule: exact official manufacturer evidence confirming `cooling_min_kw > 5.0` is sufficient for `metadata.research_disposition = "DO NOT PROGRESS"`, with a specific disposition reason.
+Hard rules, each sufficient for `metadata.research_disposition = "DO NOT PROGRESS"` when confirmed by exact authoritative evidence:
+
+- refrigerant is R410 or R410A;
+- electrical supply is 3-phase;
+- exact official manufacturer evidence confirms `cooling_min_kw > 5.0`.
+
+Record the exact evidence and a specific disposition reason. Do not infer refrigerant or phase from family/model similarity.
 
 Dominance review: systems around cooling minimum >=4.0 kW and credible/selectable minimum airflow >=450 L/s deserve comparison against similar-capacity survivors. Apply DNP only when they lack a meaningful compensating advantage such as materially better seasonal efficiency or another decision-relevant benefit.
-
-R410A is a negative factor, not an automatic DNP.
 
 Existing DNP systems remain excluded unless fresh official evidence disproves the decisive basis. Do not routinely re-research them.
 
