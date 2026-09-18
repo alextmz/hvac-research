@@ -1,19 +1,50 @@
 # Deterministic Research Protocol
 
-Mandatory for every research stage. Stage-specific scope lives under `research/stages/`; do not duplicate it here.
+Mandatory for every stage. Stage-specific scope lives under `research/stages/`.
 
-## 1. Start through the integrity gate
+## 1. Start and claim work
 
-Do not reconstruct state from chat history or run broad startup audits.
+Start through the integrity gate:
 
 ```sql
-select public.begin_research_run(
-  '<objective>',
-  '<optional notes>'
-) as run_id;
+select public.begin_research_run('<objective>','<optional notes>') as run_id;
 ```
 
-This recovers stale interrupted runs/queue work, rejects unsafe unquarantined trusted claims, and creates the new run.
+Then claim one entity-stage work bundle:
+
+```sql
+select * from public.claim_research_work('<run uuid>', null);
+```
+
+With `p_stage = null`, the database selects the earliest claimable stage. The returned rows share one `work_scope`; another run cannot own that scope while its lease is active.
+
+Do not research queue work before claiming it. Legacy unclaimed commits remain accepted only for backward compatibility.
+
+## 2. Keep leases alive
+
+A run has no maximum age. Staleness is based on heartbeat, not `started_at`.
+
+Default work leases are 15 minutes. While searching/reasoning for claimed work, refresh at least every 5 minutes and before any long retrieval batch:
+
+```sql
+select * from public.heartbeat_research_work('<run uuid>');
+```
+
+`claim_research_work()` and `commit_research_fact()` also heartbeat the run. If a lease expires, reclaim the work before committing.
+
+If abandoning a still-actionable bundle:
+
+```sql
+select public.release_research_work('<run uuid>','<work_scope>','<reason>');
+```
+
+Expired leases are recoverable by other agents. `begin_research_run()` recovers stale runs/queue state using heartbeat/lease age.
+
+## 3. Read authoritative state
+
+The live Supabase database is authoritative. Use `public.trusted_claims` for decisions, comparisons, elimination, completion checks and reports.
+
+Use `research_queue`, `research_attempts`, conflicts and stopping rules for work selection. Do not reconstruct state from chat history or prompt counts.
 
 Cheap health check:
 
@@ -21,33 +52,26 @@ Cheap health check:
 select * from public.research_integrity_health();
 ```
 
-Healthy before/after work means at least:
+Healthy means at least:
 
 - `stale_running_runs = 0`
 - `stale_working_queue = 0`
+- `expired_work_leases = 0`
 - `unquarantined_supported_verified_without_evidence = 0`
 
 Quarantined historical claims are allowed but are not trusted facts.
 
-## 2. Read live trusted state
+## 4. Commit accepted facts atomically
 
-Use `public.trusted_claims` for filtering, comparison, elimination, completion checks and reports.
+Use `public.commit_research_fact(...)` for accepted entity/field facts. It atomically records source, append-only claim, evidence, attempt, queue completion and audit event.
 
-Do not treat raw `claims.status = 'verified'` as sufficient. Raw claims are the immutable assertion ledger and may include quarantined/historical assertions.
+Atomic unit: **one accepted fact for one exact entity/system**. Retrieval and reasoning may cover the whole claimed bundle, but facts commit independently.
 
-Use live `research_queue`, `research_attempts`, conflicts and stopping rules to determine work. Prompt/chat counts and candidate lists are never authoritative.
-
-## 3. Commit accepted facts atomically
+A coordinated queue commit is accepted only from the run that owns its unexpired lease. Exact retries are idempotent through the deterministic fact key.
 
 Never insert a trusted claim first and attach evidence later.
 
-Use `public.commit_research_fact(...)` for accepted entity/field facts. It atomically performs source reuse/insert, append-only claim insert, evidence insert, research-attempt insert, queue completion and audit event. If any step fails, the fact rolls back.
-
-A deferred DB constraint independently prevents committing a `supported` or `verified` claim without `supports` evidence.
-
-Atomic unit: **one accepted fact for one exact entity/system**. Search/retrieval may be batched by family, but accepted facts should commit independently.
-
-## 4. Append-only history
+## 5. Preserve evidence history
 
 Never update/delete:
 
@@ -56,103 +80,69 @@ Never update/delete:
 - `change_events`
 - `claim_integrity_quarantine`
 
-Corrections are new assertions/evidence. Preserve contradictions and create/resolve conflicts explicitly. Never erase inconvenient prior evidence.
+Corrections are new assertions/evidence. Preserve contradictions and resolve conflicts explicitly.
 
-## 5. Evidence authority and exact identity
+## 6. Evidence and identity
 
-Engineering facts require explicit `source -> claim -> evidence` provenance. Entity metadata is not evidence.
-
-For decisive engineering facts/elimination, prefer:
+For decisive engineering facts/elimination prefer:
 
 1. official Australian engineering/service/specification document;
 2. official Australian manufacturer product page;
-3. official regional manufacturer material only when exact hardware/revision equivalence is established.
+3. official regional material only when exact hardware/revision equivalence is established.
 
-Retailers, search snippets, historical v21, model-number inference and different revisions are discovery/corroboration sources, not sufficient alone for decisive elimination.
+Retailers, snippets, historical v21, model-number inference and different revisions are discovery/corroboration only.
 
-Never transfer specs merely because products share manufacturer, family, nominal capacity, indoor unit or a similar suffix. Exact pairing/revision/phase/refrigerant generation matters. If equivalence is not evidenced, leave the fact unresolved/blocked.
+Never transfer specs merely because products share manufacturer, family, nominal capacity, indoor unit or suffix. Exact pairing/revision/phase/refrigerant generation matters. Unknown is not negative evidence.
 
-Unknown is not negative evidence.
+Keep factual reliability separate from interpretation. Useful dimensions include source authority/market relevance, exact model match, directness, independent-source count, material conflict and semantic certainty.
 
-## 6. Evidence interpretation and reliability
+## 7. Elimination discipline
 
-Keep factual reliability separate from interpretation reliability.
+Never delete an unattractive system. Set research disposition only when the active stage's evidence rule permits it.
 
-Useful derived dimensions include:
+Existing `DO NOT PROGRESS` systems stay out of normal candidate work unless fresh sufficiently authoritative evidence disproves the decisive basis. Every elimination must trace to exact trusted evidence.
 
-- source authority and Australian-market relevance;
-- model match: exact pair / exact model / family / inferred;
-- directness: direct / derived / inferred;
-- independent source count;
-- material-conflict flag;
-- semantic certainty.
+## 8. Attempts and interruption recovery
 
-Do not create a second manually maintained “truth” flag when these can be derived from provenance. `claims.confidence` is useful metadata, not a replacement for evidence.
+Record meaningful retrieval attempts. Before repeating a search path, inspect prior attempts and change strategy unless a new source/version justifies retrying it.
 
-When a value's meaning is limited (for example a published capacity-range endpoint that is not a proven compressor modulation floor), record that limitation in qualifiers rather than silently upgrading its meaning.
+Interrupted fact transactions leave no half-fact. Interrupted research leaves an expiring lease; another agent may reclaim it after expiry.
 
-## 7. DNP / elimination discipline
+## 9. Parallelism
 
-Never delete a system because it is unattractive. Retain it and set the appropriate research disposition/reason only when the active stage's evidence rule permits it.
+Parallelise by **non-overlapping claimed work scopes**. Each agent uses its own research run.
 
-Existing `DO NOT PROGRESS` systems remain excluded from normal candidate work unless fresh sufficiently authoritative evidence disproves the decisive basis. Do not repeatedly re-research them merely to reconfirm them.
+Default pattern:
 
-Any elimination must be traceable to exact trusted evidence. Secondary discovery evidence cannot silently become the elimination basis.
+- claim one entity-stage bundle;
+- retrieve roughly 3–4 useful exact/independent sources in parallel when helpful;
+- reason over the bundle coherently;
+- commit accepted facts independently;
+- heartbeat during research;
+- claim another bundle only after the current one is completed, blocked/exhausted, or released.
 
-## 8. Queue, attempt memory and interruption recovery
+Parallelise retrieval more readily than semantic mapping. Never manually bypass an active lease or parallel-write the same entity/field.
 
-Record meaningful retrieval/research attempts. Before repeating a search path, inspect prior attempts and change strategy unless there is a reason to retry (new revision, new document, changed site/index, etc.).
-
-An interrupted fact transaction leaves no half-fact. An interrupted pass may leave a stale run/queue lease; the next `begin_research_run()` recovers it.
-
-`commit_research_fact()` is idempotent for an exact retry through its deterministic fact key. A genuinely changed conclusion must be appended as new research, not mutate history.
-
-Quarantined facts should be re-researched when material; queues relying only on quarantined facts should remain/reopen unresolved.
-
-## 9. Tool selection and parallelism
-
-Optimise for deterministic reasoning and research yield, not maximum concurrency or maximum tool use.
-
-When connected and economical:
-
-- use **ordinary web search/fetch** for straightforward discovery and exact official pages;
-- use **Exa** for broader/deeper discovery when normal search is weak, for locating technical PDFs/manuals, and for finding independent corroboration efficiently;
-- use **Firecrawl** when structured extraction, crawling, or retrieval from awkward manufacturer/document sites materially reduces effort;
-- use **GitHub** for project instructions/artifacts and **Supabase** for authoritative structured research state.
-
-Do not run the same query through multiple search providers by default. Escalate tools only when the current method misses needed evidence, retrieval is difficult, or independent corroboration is required. Tool availability/pricing may change; evidence standards must not.
-
-Default concurrency:
-
-- one engineering/product family per reasoning task;
-- retrieve roughly 3–4 useful exact/independent documents/pages in parallel when helpful;
-- map the family coherently;
-- commit facts sequentially;
-- never parallel-write the same entity/field;
-- separate agents may handle non-overlapping families, each with its own research run.
-
-Parallelise retrieval more readily than semantic mapping and writes.
+Use ordinary web search/fetch for straightforward work, Exa for deeper discovery, and Firecrawl for awkward structured retrieval. Do not duplicate the same search across providers without a reason.
 
 ## 10. End of pass
 
-Run:
+Resolve or release all work owned by the run, then run:
 
 ```sql
 select * from public.research_integrity_health();
 ```
 
-Mark the current run `completed`, `stopped` or `failed` with `ended_at` and concise notes.
+Mark the run `completed`, `stopped` or `failed` with `ended_at` and concise notes. Re-query live DB state for all reported counts/status.
 
-Re-query the live DB for all reported counts/status. Report material changes, blockers and next action; do not dump large already-known lists unless needed.
+Report only material changes, blockers, current stage and next action.
 
-## Function call template
-
-When an exact accepted fact is ready:
+## Fact commit template
 
 ```sql
 select * from public.commit_research_fact(
   p_run_id := '<run uuid>',
-  p_queue_id := '<queue uuid or null>',
+  p_queue_id := '<claimed queue uuid or null>',
   p_entity_id := '<exact entity uuid>',
   p_field := '<field>',
   p_value_num := <numeric or null>,
@@ -175,4 +165,4 @@ select * from public.commit_research_fact(
 );
 ```
 
-The exact deployed function/schema is authoritative if this example ever drifts; inspect it only when an operation fails or the interface changes.
+The deployed schema/functions are authoritative if this document ever drifts.
