@@ -45,7 +45,9 @@ Prefer manufacturer controller manuals, official compatibility lists and third-p
 
 ## Research strategy
 
-Research controller paths by platform where they genuinely share hardware/protocol, but map conclusions back to exact compatible systems. Avoid repeatedly researching the same controller platform for every system when compatibility is already evidenced.
+Controller-platform queue work may run in parallel with earlier stages. For `controller` entities, establish shared platform capabilities and Home Assistant behaviour once, then reuse that evidence. Commit platform facts to the controller entity; compatibility and retained/lost functions remain mapped to the exact compatible HVAC family/system.
+
+Research controller paths by platform where they genuinely share hardware/protocol. Avoid repeatedly researching the same controller platform for every system when compatibility is already evidenced.
 
 ## Stopping rule
 
