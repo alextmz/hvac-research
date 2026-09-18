@@ -18,6 +18,13 @@ select * from public.claim_research_work('<run uuid>', null);
 
 With `p_stage = null`, the database selects the earliest claimable stage. The returned rows share one `work_scope`; another run cannot own that scope while its lease is active.
 
+Treat each claim result as one immutable `current_work` bundle:
+
+- Keep `work_scope`, `queue_id`, `entity_id` and `field` together exactly as returned.
+- For every commit, take `p_queue_id`, `p_entity_id` and `p_field` from the same row of `current_work`.
+- Before committing, verify those three values still match that row. On mismatch, stop and re-read the current claim; never guess or reuse an identifier.
+- After completing, blocking, or releasing the scope, discard `current_work` before claiming another scope.
+
 Do not research queue work before claiming it. Legacy unclaimed commits remain accepted only for backward compatibility.
 
 ## 2. Keep leases alive
@@ -77,6 +84,8 @@ Use `public.commit_research_fact(...)` for accepted entity/field facts. It atomi
 
 Atomic unit: **one accepted fact for one exact entity/system**. Retrieval and reasoning may cover the whole claimed bundle, but facts commit independently.
 
+For claimed work, every coordinated commit must use `p_queue_id`, `p_entity_id` and `p_field` from one row of the active `current_work` claim result. Never combine identifiers from different claims or scopes.
+
 A coordinated queue commit is accepted only from the run that owns its unexpired lease. Exact retries are idempotent through the deterministic fact key.
 
 Never insert a trusted claim first and attach evidence later.
@@ -126,12 +135,14 @@ Parallelise by **non-overlapping claimed work scopes**. Each agent uses its own 
 
 Default pattern:
 
-- claim one entity-stage bundle;
+- claim one entity-stage bundle and bind it as `current_work`;
 - retrieve roughly 3–4 useful exact/independent sources in parallel when helpful;
 - reason over the bundle coherently;
-- commit accepted facts independently;
+- commit accepted facts independently using only identifiers from `current_work`;
 - heartbeat during research;
-- claim another bundle only after the current one is completed, blocked/exhausted, or released.
+- complete, block/exhaust or release the scope;
+- discard `current_work`;
+- only then claim another bundle.
 
 Parallelise retrieval more readily than semantic mapping. Never manually bypass an active lease or parallel-write the same entity/field.
 
@@ -164,9 +175,9 @@ Report only material changes, blockers, current stage and next action.
 ```sql
 select * from public.commit_research_fact(
   p_run_id := '<run uuid>',
-  p_queue_id := '<claimed queue uuid or null>',
-  p_entity_id := '<exact entity uuid>',
-  p_field := '<field>',
+  p_queue_id := '<queue uuid from the same current_work row>',
+  p_entity_id := '<entity uuid from that current_work row>',
+  p_field := '<field from that current_work row>',
   p_value_num := <numeric or null>,
   p_value_text := '<text or null>',
   p_unit := '<unit or null>',
