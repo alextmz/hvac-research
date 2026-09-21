@@ -1,10 +1,10 @@
 # Australian Ducted HVAC Research — Final Stage 5 Decision Report
 
-**Snapshot:** 18 September 2026, 23:13 AEST  
+**Snapshot:** 21 September 2026, 15:50 AEST  
 **Authority:** live Supabase `canonical_claims` / `trusted_claims` state  
 **Scope:** current Australian single-split reverse-cycle ducted systems relevant to roughly 7–13 kW rated cooling, prioritising low-load/night operation, Hot-climate seasonal efficiency, zoning/Home Assistant, reliability/serviceability and value.
 
-> **Stage 5 scope note:** this is the requested final decision report from evidence currently accepted in the live database. The three pending Stage 5 audit/discovery/stability passes were intentionally not executed and are not marked complete.
+> **Current-state note:** refreshed against the live database on 21 September 2026. The three Stage 5 audit/discovery/stability items remain pending, and a new Stage 2 engineering-gap pass is active. This is therefore a current decision snapshot, not a claim that every newly opened engineering datapoint is complete.
 
 ## 1. Executive decision
 
@@ -35,7 +35,9 @@ The main limitation is important: the published minimum cooling figures are **ca
 
 **Toshiba RAV-GM high-static / Super Digital** has unusually capable native T-Zone control—up to 14 zones, individual temperature control, wireless sensors and automatic airflow response—and a qualified local AirTouch/Home Assistant route. The current DTP-A1/GP exact-revision record still has gaps in rated/max capacity and TCSPF, and its known minimum airflow is relatively high (466 L/s), making it less compelling for the smallest night zones.
 
-**Panasonic PF3** has good Hot-region efficiency (TCSPF Hot 5.12 for the 9.5 kW Compact pairing), 350 L/s minimum airflow and strong native CONEX zoning. However, the exact cooling minimum is unresolved, exact third-party compatibility is only brand-level in current evidence, and the native Home Assistant route is cloud/custom rather than a clearly established local core integration.
+**Panasonic PF3** has good Hot-region efficiency (TCSPF Hot 5.12 for the 9.5 kW Compact pairing), a now-verified 3.0 kW cooling minimum, 350 L/s minimum airflow and strong native CONEX zoning. Exact third-party compatibility is still only brand-level in current evidence, and the native Home Assistant route is cloud/custom rather than a clearly established local core integration.
+
+**TCL TCD100D1HWH-DV** is now much better characterised as an engineering/installation alternative: 10.5 kW rated, 4.0–12.8 kW published cooling range, 460 L/s minimum airflow, TCSPF Hot 5.55, EER 4.23 and up to 200 Pa ESP. Its indoor unit is manufacturer-documented as separable into three sections for access. It is not elevated into the primary shortlist because the 4.0 kW/460 L/s low-load figures are weaker and the accepted controls/support evidence is less complete.
 
 ## 2. Decision table
 
@@ -47,7 +49,8 @@ The main limitation is important: the published minimum cooling figures are **ca
 | **Hitachi PPIM-4.0 / PAS-4.0** | 10.0 / 3.2–12.0 kW | 350 L/s | 5.09 | Premium Zoning 8-zone; exact iZone local HA | A$3.64–3.71k | 6 yr | Strong balanced alternative |
 | **Fujitsu ARTH30KMTAP / AOTH30KBTA** | 8.5 / 2.8–10.3 kW | 336 L/s | 4.781 | anywAiR 10-zone VAV; local HA | 10 kW family listings ~A$4.26–4.68k | 5 yr | Strong control stack; lower efficiency/headroom |
 | **Carrier QSH105** | 10.05 / 2.4–11.7 kW | 333 L/s | unknown | exact iZone; local HA; native zoning not established | **A$2.79–3.20k** | 7 yr | Excellent value; seasonal-efficiency/control gaps |
-| **Panasonic PF3 9.5 Compact** | 9.5 / min unknown–11.4 kW | 350 L/s | 5.12 | CONEX 8-zone; HA cloud/custom unless third-party exact match proven | ~A$4.57k | 5 yr | Solid native system, but low-load and HA evidence weaker |
+| **Panasonic PF3 9.5 Compact** | 9.5 / 3.0–11.4 kW | 350 L/s | 5.12 | CONEX 8-zone; HA cloud/custom unless third-party exact match proven | ~A$4.57k | 5 yr | Cooling minimum now resolved; HA evidence remains weaker |
+| **TCL TCD100D1HWH-DV** | 10.5 / 4.0–12.8 kW | 460 L/s | 5.55 | controls/HA evidence not yet decision-ready | unresolved | unresolved | 200 Pa high-static and 3-piece separable indoor; weaker low-load fit |
 | **Toshiba RAV-GM DTP-A1 / GP 10 kW class** | exact current revision has canonical rated/max gaps; min 2.6 kW | 466 L/s | unknown | T-Zone 14-zone; qualified AirTouch local HA | Super Digital high-static ~A$4.20k | 7 yr | Controls-rich but less convincing for tiny-zone airflow |
 | **ActronAir ASPIRE LRE-100DS / URC-100DS** | 10.2 / 2.3–11.61 kW | **139 L/s** | **5.61** | NEXUS requires constant-zone/bypass strategy; Stage 3/4 family evidence incomplete | unresolved | unresolved | Engineering standout, but not decision-ready in current DB |
 
@@ -64,9 +67,13 @@ The strongest directly useful low-load indicator in the current evidence is ther
 3. zoning behaviour as zones close;
 4. required constant/spill/bypass airflow.
 
-On those observable dimensions, Rinnai B1A is unusually strong because both the published capacity endpoint and indoor airflow are low. MHI FDU VNP has the lowest published capacity endpoint but materially higher minimum airflow. Hitachi and Fujitsu remain credible but require more airflow. Panasonic's cooling minimum is unresolved. Toshiba's high-static branch has substantially higher minimum airflow.
+On those observable dimensions, Rinnai B1A is unusually strong because both the published capacity endpoint and indoor airflow are low. MHI FDU VNP has the lowest published capacity endpoint but materially higher minimum airflow. Hitachi and Fujitsu remain credible but require more airflow. Panasonic PF3 9.5 Compact is now resolved at 3.0 kW. Toshiba's high-static branch has substantially higher minimum airflow.
 
 A notable warning is **MHI FDUA**: its FlexiZone guidance calls for a common or automatic spill zone carrying roughly 50% of total airflow, which works against the goal of conditioning a very small bedroom zone alone. This is why the FDU slimline VNP system is preferred over FDUA for this objective.
+
+### Installation-access update
+
+The later engineering pass added exact indoor dimensions, weights and manufacturer-documented separability. The principal 9–11 kW shortlist units are generally **not** installation-splittable: Rinnai 9 kW is 1200×245×750 mm, Rinnai 11 kW 1200×300×750 mm, MHI FDU100 1370×280×740 mm, Hitachi PPIM-4.0 1400×300×800 mm, Fujitsu ARTH30 1400×240×700 mm, Carrier QSH105 1200×380×625 mm and Panasonic PF3 1400×250×730 mm. Manufacturer-documented separable alternatives include Hitachi PPIH high-ESP, Panasonic PE4 and TCL's 10–16 kW high-static range. This can be decisive where roof-space access is constrained and should be checked before final model selection.
 
 ## 4. Seasonal efficiency
 
@@ -129,7 +136,7 @@ These gaps are explicitly retained rather than guessed:
 - no demonstrated continuous compressor floor / below-minimum cycling behaviour for most systems;
 - Hot TCSPF missing for MHI FDU VNP, Carrier QSH and Toshiba RAV;
 - ActronAir ASPIRE has excellent engineering evidence but insufficient canonical Stage 3/4 control, reliability and price coverage to elevate it;
-- Panasonic PF3 exact cooling minimum is unresolved;
+- Panasonic PF3 9.5 Compact cooling minimum is now verified at 3.0 kW; some larger PF3 pairings still retain cooling-minimum gaps;
 - exact third-party feature retention remains incomplete for several brands;
 - installed prices are not normalised across duct design, outlet count, zoning hardware and electrical work;
 - three Stage 5 audit/discovery/stability queue items remain pending by explicit instruction.
@@ -148,20 +155,25 @@ For quotation/design work:
 
 ## 10. Stage 5 status
 
-At report generation, database integrity was healthy:
+At the 21 September refresh, database integrity remains healthy:
 
 - open conflicts: **0**
 - unquarantined supported/verified claims without supporting evidence: **0**
-- stale/idle research runs or orphan/expired work leases: **0**
-- trusted claims: **3,073**
-- canonical claims: **3,002**
+- stale/idle research runs: **0**
+- orphan/expired work leases: **0**
+- trusted claims: **3,788**
+- canonical claims: **3,716**
 - quarantined historical claims: **118**
 - system entities: **180**
 - DO NOT PROGRESS systems: **112**
 - surviving systems: **68**
-- current objective-fit survivors under the report query: **56 systems across 23 families**
+- effective active research runs: **1**
+- Stage 2 queue: **113 pending**, **13 working**
+- Stage 5 queue: **3 pending**
 
-This report is therefore a valid final decision snapshot from the accepted evidence, while **not asserting that the three intentionally skipped Stage 5 audit passes are complete**.
+The inventory/disposition totals are unchanged from the original report, but engineering coverage has materially increased. The active Stage 2 work means the project is currently filling residual engineering gaps rather than asserting total completion. The practical shortlist conclusions above remain supported by the live canonical state, subject to the explicitly retained uncertainties.
+
+A machine-readable export of all current DNP systems is maintained at `reports/dnp-systems.csv`.
 
 ## 11. Key exact-system engineering sources
 
