@@ -98,6 +98,10 @@ A coordinated queue commit is accepted only from the run that owns its unexpired
 
 Never insert a trusted claim first and attach evidence later.
 
+For accepted facts discovered outside a claimed queue item (for example, a forensic follow-up or resurrection check), still use `public.commit_research_fact(...)` atomically with `p_queue_id := null`. The function is designed to permit queue-less accepted facts while preserving the same source/claim/evidence/change-event integrity guarantees. Do **not** manually insert into `claims` and then try to attach evidence in a later transaction: the deferred evidence-integrity trigger is checked at transaction end, and `claims` are immutable after insertion.
+
+If an accidental/manual `unverified` claim already exists, leave it as immutable audit history and append the accepted evidence-backed assertion through `commit_research_fact()` with a new deterministic fact key. Do not disable triggers, mutate the old claim, or bypass evidence integrity.
+
 Supported numeric evidence is checked against existing trusted numeric assertions for the same entity/field. Material disagreement automatically creates an open conflict; resolve it explicitly before using that field canonically.
 
 ## 5. Preserve evidence history
