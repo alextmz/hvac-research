@@ -45,7 +45,7 @@ Default work leases are 15 minutes. While searching/reasoning for claimed work, 
 select * from public.heartbeat_research_work('<run uuid>');
 ```
 
-`claim_research_work()` and `commit_research_fact()` also heartbeat the run. Heartbeat removes orphan leases before extending valid ones. If a lease expires, reclaim the work before committing.
+`claim_research_work()` and `commit_research_fact_v2()` also heartbeat the run. Heartbeat removes orphan leases before extending valid ones. If a lease expires, reclaim the work before committing.
 
 If abandoning a still-actionable bundle:
 
@@ -60,7 +60,9 @@ A DB cron job runs runtime reconciliation every 5 minutes. It recovers expired/a
 The live Supabase database is authoritative.
 
 - Use `public.canonical_claims` for single-value decisions, comparisons, elimination, completion checks and reports.
-- Use `public.trusted_claims` for the full trusted evidence history and conflict investigation.
+- Use `public.trusted_claims` for the full currently effective trusted evidence set and conflict investigation.
+- Use `public.effective_claims` when inspecting all current assertions, including non-trusted statuses; resolved/superseded historical claims are excluded.
+- Use raw `public.claims` only for audit/history. Never treat a resolved historical claim as current.
 - An open conflict suppresses that entity/field from `canonical_claims` until resolved.
 
 Use `research_queue`, `research_attempts`, conflicts and stopping rules for work selection. Do not reconstruct state from chat history or prompt counts.
@@ -88,7 +90,7 @@ Quarantined historical claims are allowed but are not trusted facts.
 
 ## 4. Commit accepted facts atomically
 
-Use `public.commit_research_fact(...)` for accepted entity/field facts. It atomically records source, append-only claim, evidence, attempt, queue completion and audit event.
+Use `public.commit_research_fact_v2(...)` for accepted entity/field facts. It atomically records source, append-only claim, evidence, attempt, queue completion and audit event, and can atomically resolve/supersede a prior immutable claim.
 
 Atomic unit: **one accepted fact for one exact entity/system**. Retrieval and reasoning may cover the whole claimed bundle, but facts commit independently.
 
@@ -98,11 +100,11 @@ A coordinated queue commit is accepted only from the run that owns its unexpired
 
 Never insert a trusted claim first and attach evidence later.
 
-For accepted facts discovered outside a claimed queue item (for example, a forensic follow-up or resurrection check), still use `public.commit_research_fact(...)` atomically with `p_queue_id := null`. The function is designed to permit queue-less accepted facts while preserving the same source/claim/evidence/change-event integrity guarantees. Do **not** manually insert into `claims` and then try to attach evidence in a later transaction: the deferred evidence-integrity trigger is checked at transaction end, and `claims` are immutable after insertion.
+For accepted facts discovered outside a claimed queue item (for example, a forensic follow-up or resurrection check), still use `public.commit_research_fact_v2(...)` atomically with `p_queue_id := null`. The function is designed to permit queue-less accepted facts while preserving the same source/claim/evidence/change-event integrity guarantees. Do **not** manually insert into `claims` and then try to attach evidence in a later transaction: the deferred evidence-integrity trigger is checked at transaction end, and `claims` are immutable after insertion.
 
-If an accidental/manual `unverified` claim already exists, leave it as immutable audit history and append the accepted evidence-backed assertion through `commit_research_fact()` with a new deterministic fact key. Do not disable triggers, mutate the old claim, or bypass evidence integrity.
+If an accidental/manual `unverified` claim already exists, leave it as immutable audit history and append the accepted evidence-backed assertion through `commit_research_fact_v2()` with a new deterministic fact key. Do not disable triggers, mutate the old claim, or bypass evidence integrity.
 
-Supported numeric evidence is checked against existing trusted numeric assertions for the same entity/field. Material disagreement automatically creates an open conflict; resolve it explicitly before using that field canonically.
+Supported numeric evidence is checked against existing effective trusted numeric assertions for the same entity/field and canonical operating-condition identity. Different documented temperatures/airflows/load states do not conflict merely because their values differ. A material disagreement under the same condition identity creates an open conflict; resolve it explicitly before using that field canonically.
 
 ## 5. Preserve evidence history
 
@@ -113,7 +115,7 @@ Never update/delete:
 - `change_events`
 - `claim_integrity_quarantine`
 
-Corrections are new assertions/evidence. Preserve contradictions and resolve conflicts explicitly.
+Corrections are new assertions/evidence. Preserve contradictions and resolve conflicts explicitly. When a new fact replaces an old assertion (including `not_found`), pass `p_resolves_claim_id`, `p_resolution_type` and `p_resolution_reason` to `commit_research_fact_v2()`. Do not encode resolution only in free-form qualifiers.
 
 ## 6. Evidence, identity and context privacy
 
@@ -191,7 +193,7 @@ Report only material changes, blockers, current stage and next action.
 ## Fact commit template
 
 ```sql
-select * from public.commit_research_fact(
+select * from public.commit_research_fact_v2(
   p_run_id := '<run uuid>',
   p_queue_id := '<queue uuid from the same current_work row>',
   p_entity_id := '<entity uuid from that current_work row>',
@@ -212,7 +214,11 @@ select * from public.commit_research_fact(
   p_observed_value := '<observed value>',
   p_independence_group := '<independence group>',
   p_attempt_strategy := '<strategy>',
-  p_attempt_query := '<query>'
+  p_attempt_query := '<query>',
+  p_fact_key := '<stable deterministic fact key>',
+  p_resolves_claim_id := <prior claim uuid or null>,
+  p_resolution_type := <'resolved_not_found'|'superseded'|'duplicate'|'model_mismatch'|'source_correction' or null>,
+  p_resolution_reason := '<concise reason or null>'
 );
 ```
 
