@@ -59,8 +59,10 @@ A DB cron job runs runtime reconciliation every 5 minutes. It recovers expired/a
 
 The live Supabase database is authoritative.
 
-- Use `public.canonical_claims` for single-value decisions, comparisons, elimination, completion checks and reports.
-- Use `public.canonical_condition_claims` for condition-dependent performance points; it is keyed by entity + field + condition identity and excludes incomplete conditioned evidence.
+- Use `public.canonical_claims` for exact-entity single-value truth, conflict work and exact-SKU reporting.
+- Use `public.canonical_condition_claims` for exact-entity condition-dependent performance points; it is keyed by entity + field + condition identity and excludes incomplete conditioned evidence.
+- Use `public.decision_input_claims` for decision/scoring reads when canonical hardware-platform fallback is allowed. Exact branded/SKU claims always win; platform claims only fill missing fields and carry explicit inherited provenance plus reduced confidence.
+- Use `public.decision_input_condition_claims` for condition-keyed decision/scoring reads with the same exact-first/platform-fallback rule.
 - Use `public.trusted_claims` for the full currently effective trusted evidence set and conflict investigation.
 - Use `public.effective_claims` when inspecting all current assertions, including non-trusted statuses; resolved/superseded historical claims are excluded.
 - Use raw `public.claims` only for audit/history. Never use it for current-state decisions.
@@ -157,6 +159,34 @@ Do not attach a foreign measured value to an Australian entity as though it were
 Before accepting `regional_equivalent` for quantitative transfer, compare as many of these as available: cooling and heating min/rated/max ranges, rated cooling/heating input, EER/COP, indoor/outdoor dimensions and weights, refrigerant charge, pipe sizes, compressor architecture, airflow/ESP, sound and electrical supply. Capacity ranges and rated efficiency/input are primary identity checks, not model-name similarity.
 
 Independent/regulatory test points from a regional equivalent can replace generic inference when equivalence is strong. Platform-sibling data should normally constrain/calibrate an inferred curve rather than overwrite exact Australian measurements. Family-proxy data must not be promoted to direct measurement.
+
+### Canonical physical hardware platforms
+
+When several marketed systems are the same physical assembly with branding, packaging, controller/firmware or minor specification changes, represent the shared assembly once as an `entities.entity_type='hardware_platform'` entity and retain every branded/model system as its own `system` entity.
+
+Register only true same-hardware members through `public.register_hardware_platform_member(...)` / `public.hardware_platform_memberships`.
+
+Default collapse tolerance is **2% for numeric engineering values**, but 2% similarity alone never proves identity. Require convergence across several independent physical fingerprints such as chassis dimensions/mass, refrigerant/charge, piping, compressor architecture, indoor/outdoor construction, capacity/input, electrical topology and duct/fan geometry. Use `public.hardware_values_within_tolerance(a,b,2.0)` as a calculation aid, not as an identity decision.
+
+Membership classes are:
+- `exact` — same hardware assembly;
+- `within_2pct` — same hardware assembly with minor numeric/packaging variation within the accepted tolerance.
+
+Member roles preserve commercial identity:
+- `reference_implementation`;
+- `branded_variant`;
+- `oem_variant`;
+- `regional_variant`.
+
+Do **not** collapse a merely related `platform_sibling` or `family_proxy` into the hardware platform. Keep those as `entity_relationships` only.
+
+Store shared physical/engineering facts on the `hardware_platform` entity when supported. Keep branding, price, warranty, market availability, service/support, controller/gateway/app behaviour and other market-specific facts on the branded system entity. Airflow maps, compressor tuning, control behaviour and certification results remain SKU-specific whenever evidence shows material firmware/configuration differences.
+
+For decisions, read `decision_input_claims` / `decision_input_condition_claims`. They enforce:
+1. exact branded/SKU canonical fact;
+2. if missing, inherited canonical hardware-platform fact with explicit `evidence_scope='hardware_platform_inherited'`, platform/member provenance and confidence reduction.
+
+Historical duplicate claims remain immutable audit history. Do not delete or rewrite them merely because a platform is later canonicalised.
 
 ## 7. Elimination discipline
 
