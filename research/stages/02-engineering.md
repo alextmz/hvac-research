@@ -79,7 +79,7 @@ Keep these concepts separate:
 - commissioning auto-ESP/airflow calibration;
 - continuous runtime constant-airflow control.
 
-For cross-market quantitative transfer, first persist the source model as its own entity and its AU relationship in `entity_relationships`. Cooling/heating min-rated-max ranges, EER/COP and rated input should be equal or very close before treating a model as a regional equivalent. Also compare dimensions/weights, refrigerant charge, piping, compressor, airflow/ESP, sound and electrical supply. Use the provenance qualifier convention in `RESEARCH_PROTOCOL.md`.
+For cross-market quantitative transfer, first persist the source model as its own entity and its AU relationship in `entity_relationships`. If the evidence establishes that several marketed systems are the same physical assembly (normally multiple matching fingerprints with numeric values within 2%), create/reuse the canonical `hardware_platform` and register those same-hardware systems as members. Store genuinely shared engineering facts once on the platform; retain SKU-specific deviations on the branded entity. Use `decision_input_claims` / `decision_input_condition_claims` for exact-first platform fallback. Cooling/heating min-rated-max ranges, EER/COP and rated input should be equal or very close before treating a model as a regional equivalent. Also compare dimensions/weights, refrigerant charge, piping, compressor, airflow/ESP, sound and electrical supply. Use the provenance qualifier convention in `RESEARCH_PROTOCOL.md`.
 
 Do not call a mild-temperature EN 14825 part-load electrical measurement a "minimum input" unless the source explicitly says it is the minimum. Store the test condition and measurement type.
 
