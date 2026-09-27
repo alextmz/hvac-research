@@ -15,6 +15,9 @@ Exclude VRF/VRV, multi-split, rooftop packaged, cassette-only, close-control and
 - Discover current manufacturer families from official Australian catalogues/product ranges first; use GEMS/distributors/broad web as discovery aids.
 - Resolve exact indoor + outdoor pairings, phase variants, refrigerant revisions, suffixes, package aliases and materially different generations.
 - Store exact systems/components/aliases rather than treating a family name as the engineering unit.
+- When multiple branded/regional systems are verified as the same physical assembly, create/reuse one canonical `hardware_platform`, register each marketed system in `hardware_platform_memberships`, and keep the marketed system entities intact for brand/model/market identity.
+- Use 2% as the default allowable numeric variation for same-hardware collapse only after several physical fingerprints agree. Similar nominal capacity alone is never sufficient.
+- Keep materially different electrical/chassis/performance variants as `platform_sibling` relationships rather than forcing them into one hardware platform.
 - Treat manufacturer or distributor package names as aliases unless they define a distinct engineering combination.
 - Re-check any newly discovered exact system against scope before adding downstream work.
 
