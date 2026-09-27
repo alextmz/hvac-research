@@ -54,6 +54,35 @@ For decisive engineering facts and elimination:
 
 Retailers, snippets, historical reports and model-number inference are discovery/corroboration only and cannot by themselves drive elimination.
 
+
+
+## Cross-market gap filling
+
+For serious contenders, actively search authoritative foreign/regional datasets when Australian material lacks low-load measurements. Highest-value targets are:
+
+- selectable/minimum indoor airflow and the conditions under which it applies;
+- minimum and selectable external static pressure;
+- automatic ESP / automatic airflow commissioning behaviour, distinguishing one-time calibration from continuous closed-loop constant-airflow control;
+- published minimum cooling/heating electrical input;
+- independently measured part-load cooling/heating capacity and EER/COP points;
+- minimum continuous operation load ratio (`LRcontmin`) and its efficiency correction (`CcpLRcontmin`);
+- standby, off, thermostat-off and crankcase-heater power.
+
+Keep these concepts separate:
+
+- catalogue minimum capacity;
+- tested part-load capacity at a specified outdoor condition;
+- minimum continuous compressor/load ratio;
+- published minimum electrical input;
+- tested part-load electrical input;
+- selectable minimum fan airflow;
+- commissioning auto-ESP/airflow calibration;
+- continuous runtime constant-airflow control.
+
+For cross-market quantitative transfer, first persist the source model as its own entity and its AU relationship in `entity_relationships`. Cooling/heating min-rated-max ranges, EER/COP and rated input should be equal or very close before treating a model as a regional equivalent. Also compare dimensions/weights, refrigerant charge, piping, compressor, airflow/ESP, sound and electrical supply. Use the provenance qualifier convention in `RESEARCH_PROTOCOL.md`.
+
+Do not call a mild-temperature EN 14825 part-load electrical measurement a "minimum input" unless the source explicitly says it is the minimum. Store the test condition and measurement type.
+
 ## Elimination / DNP
 
 Retain every system in the database. Do not delete it.
