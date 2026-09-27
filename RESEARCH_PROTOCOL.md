@@ -134,6 +134,30 @@ Keep factual reliability separate from interpretation. Useful dimensions include
 
 Project context may record only the coarse Australian climate region needed for analysis. Do not store or introduce precise user location, person names, email addresses or other personally identifiable information in prompts, notes, reports or research context.
 
+
+
+### Cross-market / sibling measurements
+
+Foreign-market measurements may fill Australian evidence gaps only when the source model is represented as a distinct entity and its relationship to the Australian target is persisted in `public.entity_relationships`.
+
+Use relationship types consistently:
+
+- `regional_equivalent` — effectively the same engineering product with regional suffix/configuration differences;
+- `platform_sibling` — strongly related refrigeration/control platform but material hardware/configuration differences remain;
+- `family_proxy` — weaker family/OEM relationship suitable only as a prior or corroboration;
+- `oem_variant` — known OEM/rebadge relationship;
+- `supersedes` — product-generation succession, not measurement equivalence.
+
+Relationship `confidence` measures applicability/equivalence. It is separate from `claims.confidence`, which measures confidence in the factual assertion/source.
+
+When committing a value observed on another entity against an Australian target, preserve the original measured model and market in `claims.qualifier`. Use the canonical keys where applicable: `evidence_scope`, `applicability_type`, `measured_entity`, `measured_market`, `target_market`, `equivalence_confidence`, `equivalence_basis`, `relationship_id`, `test_standard`, `test_condition`, `outdoor_db_c`, `indoor_db_c`, `indoor_wb_c` and `load_condition`.
+
+Do not attach a foreign measured value to an Australian entity as though it were an exact-Australian measurement. Preserve the foreign source in `evidence`/`sources` and the persisted relationship in the qualifier.
+
+Before accepting `regional_equivalent` for quantitative transfer, compare as many of these as available: cooling and heating min/rated/max ranges, rated cooling/heating input, EER/COP, indoor/outdoor dimensions and weights, refrigerant charge, pipe sizes, compressor architecture, airflow/ESP, sound and electrical supply. Capacity ranges and rated efficiency/input are primary identity checks, not model-name similarity.
+
+Independent/regulatory test points from a regional equivalent can replace generic inference when equivalence is strong. Platform-sibling data should normally constrain/calibrate an inferred curve rather than overwrite exact Australian measurements. Family-proxy data must not be promoted to direct measurement.
+
 ## 7. Elimination discipline
 
 Never delete an unattractive system. Set research disposition only when the active stage's evidence rule permits it.
